@@ -83,7 +83,7 @@ interface IERC20 {
  * Using this library instead of the unchecked operations eliminates an entire
  * class of bugs, so it's recommended to use it always.
  */
- 
+
 library SafeMath {
     /**
      * @dev Returns the addition of two unsigned integers, reverting on
@@ -453,7 +453,7 @@ contract Ownable is Context {
         _lockTime = now + time;
         emit OwnershipTransferred(_owner, address(0));
     }
-    
+
     //Unlocks the contract for owner when _lockTime is exceeds
     function unlock() public virtual {
         require(_previousOwner == msg.sender, "You don't have permission to unlock");
@@ -687,19 +687,19 @@ contract ODOL is Context, IERC20, Ownable {
 
     mapping (address => bool) private _isExcluded;
     address[] private _excluded;
-   
+
     uint256 private constant MAX = ~uint256(0);
     uint256 private _tTotal = 420000000 * 10**18;
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
     string private _name = "ODOL COIN";
-    string private _symbol = "ODOL (TEST)";
+    string private _symbol = "ODOL";
     uint8 private _decimals = 18;
-    
+
     uint256 public _taxFee = 2;
     uint256 private _previousTaxFee = _taxFee;
-    
+
     uint256 public _liquidityFee = 2;
     uint256 private _previousLiquidityFee = _liquidityFee;
 
@@ -707,20 +707,20 @@ contract ODOL is Context, IERC20, Ownable {
     uint256 private _previousBurnFee = _burnFee;
 
     uint256 public _charityFee = 1;
-    address public charityWallet = 0xb0bB1FAeb37399c123f9A6398Da9dBeaddE1E30b;
+    address public charityWallet = 0xc068972F2F04993D354F0B6548E029d845821A36;
     uint256 private _previouscharityFee = _charityFee;
-    
+
     uint256 private time1 = 10800;
     uint256 private time2 = 35940;
 
     IUniswapV2Router02 public  uniswapV2Router;
     address public  uniswapV2Pair;
-    
+
     bool inSwapAndLiquify;
     bool public swapAndLiquifyEnabled = false;
 
     uint256 private numTokensSellToAddToLiquidity = 8000 * 10**18;
-    
+
     event MinTokensBeforeSwapUpdated(uint256 minTokensBeforeSwap);
     event SwapAndLiquifyEnabledUpdated(bool enabled);
     event SwapAndLiquify(
@@ -728,28 +728,28 @@ contract ODOL is Context, IERC20, Ownable {
         uint256 ethReceived,
         uint256 tokensIntoLiqudity
     );
-    
+
     modifier lockTheSwap {
         inSwapAndLiquify = true;
         _;
         inSwapAndLiquify = false;
     }
-    
+
     constructor () public {
         _rOwned[_msgSender()] = _rTotal;
-        
-        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0xD99D1c33F9fC3444f8101754aBC46c52416550D1);
+
+        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
          // Create a uniswap pair for this new token
         uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
             .createPair(address(this), _uniswapV2Router.WETH());
 
         // set the rest of the contract variables
         uniswapV2Router = _uniswapV2Router;
-        
+
         //exclude owner and this contract from fee
         _isExcludedFromFee[owner()] = true;
         _isExcludedFromFee[address(this)] = true;
-        
+
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
 
@@ -868,12 +868,12 @@ contract ODOL is Context, IERC20, Ownable {
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
         _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);        
+        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
         _takeLiquidity(tLiquidity);
         _reflectFee(rFee, tFee);
         emit Transfer(sender, recipient, tTransferAmount);
     }
-    
+
      //to recieve ETH from uniswapV2Router when swaping
     receive() external payable {}
 
@@ -910,7 +910,7 @@ contract ODOL is Context, IERC20, Ownable {
 
     function _getCurrentSupply() private view returns(uint256, uint256) {
         uint256 rSupply = _rTotal;
-        uint256 tSupply = _tTotal;      
+        uint256 tSupply = _tTotal;
         for (uint256 i = 0; i < _excluded.length; i++) {
             if (_rOwned[_excluded[i]] > rSupply || _tOwned[_excluded[i]] > tSupply) return (_rTotal, _tTotal);
             rSupply = rSupply.sub(_rOwned[_excluded[i]]);
@@ -919,7 +919,7 @@ contract ODOL is Context, IERC20, Ownable {
         if (rSupply < _rTotal.div(_tTotal)) return (_rTotal, _tTotal);
         return (rSupply, tSupply);
     }
-    
+
     function _takeLiquidity(uint256 tLiquidity) private {
         uint256 currentRate =  _getRate();
         uint256 rLiquidity = tLiquidity.mul(currentRate);
@@ -927,7 +927,7 @@ contract ODOL is Context, IERC20, Ownable {
         if(_isExcluded[address(this)])
             _tOwned[address(this)] = _tOwned[address(this)].add(tLiquidity);
     }
-    
+
     function calculateTaxFee(uint256 _amount) private view returns (uint256) {
         return _amount.mul(_taxFee).div(
             10**2
@@ -939,28 +939,28 @@ contract ODOL is Context, IERC20, Ownable {
             10**2
         );
     }
-    
+
     function removeAllFee() private {
         if(_taxFee == 0 && _liquidityFee == 0 && _charityFee==0 && _burnFee==0) return;
-        
+
         _previousTaxFee = _taxFee;
         _previousLiquidityFee = _liquidityFee;
         _previousBurnFee = _burnFee;
         _previouscharityFee = _charityFee;
-        
+
         _taxFee = 0;
         _liquidityFee = 0;
         _charityFee = 0;
         _burnFee = 0;
     }
-    
+
     function restoreAllFee() private {
        _taxFee = _previousTaxFee;
        _liquidityFee = _previousLiquidityFee;
        _burnFee = _previousBurnFee;
        _charityFee = _previouscharityFee;
     }
-    
+
     function isExcludedFromFee(address account) public view returns(bool) {
         return _isExcludedFromFee[account];
     }
@@ -985,7 +985,7 @@ contract ODOL is Context, IERC20, Ownable {
         // tokens that we need to initiate a swap + liquidity lock?
         // also, don't get caught in a circular liquidity event.
         // also, don't swap & liquify if sender is uniswap pair.
-        uint256 contractTokenBalance = balanceOf(address(this));        
+        uint256 contractTokenBalance = balanceOf(address(this));
         bool overMinTokenBalance = contractTokenBalance >= numTokensSellToAddToLiquidity;
         if (
             overMinTokenBalance &&
@@ -997,7 +997,7 @@ contract ODOL is Context, IERC20, Ownable {
             //add liquidity
             swapAndLiquify(contractTokenBalance);
         }
-        
+
         //transfer amount, it will take tax, burn, liquidity fee
         _tokenTransfer(from,to,amount);
     }
@@ -1021,7 +1021,7 @@ contract ODOL is Context, IERC20, Ownable {
 
         // add liquidity to uniswap
         addLiquidity(otherHalf, newBalance);
-        
+
         emit SwapAndLiquify(half, newBalance, otherHalf);
     }
 
@@ -1063,7 +1063,7 @@ contract ODOL is Context, IERC20, Ownable {
         if(_isExcludedFromFee[sender] || _isExcludedFromFee[recipient]){
             removeAllFee();
         }
-        
+
         //Calculate burn amount and charity amount
         uint256 burnAmt = amount.mul(_burnFee).div(100);
         uint256 charityAmt = amount.mul(_charityFee).div(100);
@@ -1079,7 +1079,7 @@ contract ODOL is Context, IERC20, Ownable {
         } else {
             _transferStandard(sender, recipient, (amount.sub(burnAmt).sub(charityAmt)));
         }
-        
+
         //Temporarily remove fees to transfer to burn address and charity wallet
         _taxFee = 0;
         _liquidityFee = 0;
@@ -1110,7 +1110,7 @@ contract ODOL is Context, IERC20, Ownable {
         (uint256 rAmount, uint256 rTransferAmount, uint256 rFee, uint256 tTransferAmount, uint256 tFee, uint256 tLiquidity) = _getValues(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
         _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);           
+        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
         _takeLiquidity(tLiquidity);
         _reflectFee(rFee, tFee);
         emit Transfer(sender, recipient, tTransferAmount);
@@ -1120,7 +1120,7 @@ contract ODOL is Context, IERC20, Ownable {
         (uint256 rAmount, uint256 rTransferAmount, uint256 rFee, uint256 tTransferAmount, uint256 tFee, uint256 tLiquidity) = _getValues(tAmount);
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);   
+        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
         _takeLiquidity(tLiquidity);
         _reflectFee(rFee, tFee);
         emit Transfer(sender, recipient, tTransferAmount);
@@ -1129,11 +1129,11 @@ contract ODOL is Context, IERC20, Ownable {
     function excludeFromFee(address account) public onlyOwner {
         _isExcludedFromFee[account] = true;
     }
-    
+
     function includeInFee(address account) public onlyOwner {
         _isExcludedFromFee[account] = false;
     }
-    
+
 
     function disableAllFees() external onlyOwner() {
         _taxFee = 0;
@@ -1147,27 +1147,27 @@ contract ODOL is Context, IERC20, Ownable {
         inSwapAndLiquify = false;
         emit SwapAndLiquifyEnabledUpdated(false);
     }
-    
+
     function setcharityWallet(address newWallet) external onlyOwner() {
         charityWallet = newWallet;
     }
-    
+
     function setTaxFeePercent(uint256 taxFee) external onlyOwner() {
         _taxFee = taxFee;
     }
-    
+
     function setLiquidityFeePercent(uint256 liquidityFee) external onlyOwner() {
         _liquidityFee = liquidityFee;
     }
-    
+
     function setChartityFeePercent(uint256 charityFee) external onlyOwner() {
         _charityFee = charityFee;
     }
-    
+
     function setBurnFeePercent(uint256 burnFee) external onlyOwner() {
         _burnFee = burnFee;
     }
-    
+
     //New Pancakeswap router version?
     //No problem, just change it!
     function setRouterAddress(address newRouter) public onlyOwner() {
@@ -1176,10 +1176,10 @@ contract ODOL is Context, IERC20, Ownable {
         uniswapV2Pair = IUniswapV2Factory(_newPancakeRouter.factory()).createPair(address(this), _newPancakeRouter.WETH());
         uniswapV2Router = _newPancakeRouter;
     }
-    
+
     function setSwapAndLiquifyEnabled(bool _enabled) public onlyOwner {
         swapAndLiquifyEnabled = _enabled;
         emit SwapAndLiquifyEnabledUpdated(_enabled);
     }
-    
+
 }
